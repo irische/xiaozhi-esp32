@@ -11,6 +11,9 @@
 #include <freertos/task.h>
 #include <esp_network.h>
 #include <esp_log.h>
+#include <esp_wifi.h>
+#include <nvs.h>
+#include <nvs_flash.h>
 
 #include <wifi_station.h>
 #include <wifi_configuration_ap.h>
@@ -81,6 +84,8 @@ void WifiBoard::StartNetwork() {
     // If no WiFi SSID is configured, enter WiFi configuration mode
     auto& ssid_manager = SsidManager::GetInstance();
     auto ssid_list = ssid_manager.GetSsidList();
+    
+    // ===== 修改：WifiPreConnect已经将凭据保存到SsidManager中，所以这里只需要检查SsidManager =====
     if (ssid_list.empty()) {
         wifi_config_mode_ = true;
         EnterWifiConfigMode();
@@ -105,6 +110,9 @@ void WifiBoard::StartNetwork() {
         notification += ssid;
         display->ShowNotification(notification.c_str(), 30000);
     });
+    
+    // ===== 修改：统一使用WifiStation连接，WifiPreConnect已经将凭据保存到SsidManager中 =====
+    ESP_LOGI(TAG, "启动WifiStation，将使用SsidManager中的凭据连接");
     wifi_station.Start();
 
     // Try to connect to WiFi, if failed, launch the WiFi configuration AP
